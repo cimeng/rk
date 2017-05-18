@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="nama_toko">
+        <item>Pujasera Maju Jaya</item>
+        <item>Sop Ayam Barokah</item>
+        <item>Soto Do\'a Ibu</item>
+        <item>Sate Lancar Jaya</item>
+        <item>Bakso Sumber Rejeki</item>
+        <item>RM Mewah</item>
+        <item>Nasi Bakar Godokan</item>
+    </string-array>
+    <string-array name="subs">
+        <item>Rumah makan enak</item>
+        <item>Rumah makan enak</item>
+        <item>Rumah makan enak</item>
+        <item>Rumah makan enakk</item>
+        <item>Rumah makan enak</item>
+        <item>Rumah makan enak</item>
+        <item>Rumah makan enak</item>
+    </string-array>
+</resources>
