@@ -47,7 +47,17 @@ public class UploadImageActivity extends AppCompatActivity {
                 startActivityForResult(intent, CAMERA_CAPTURE_IMAGE_REQUEST_CODE);
             }
         });
+        
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                uploadImage();
+            }
+        });
 
+    }
+
+    private void uploadImage() {
     }
 
     @Override
@@ -75,6 +85,7 @@ public class UploadImageActivity extends AppCompatActivity {
 
                 // successfully captured the image
                 // launching upload activity
+                button.setEnabled(true);
                 try {
                     image.setImageBitmap(MediaStore.Images.Media.getBitmap(this.getContentResolver(),fileUri));
                 } catch (IOException e) {
