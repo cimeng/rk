@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.RadioButton;
@@ -52,6 +53,8 @@ public class SurveyActivity extends AppCompatActivity {
         TextView locationName = (TextView) findViewById(R.id.location_name);
         locationName.setText(name);
 
+        final CheckBox cekboks = (CheckBox) findViewById(R.id.checkSurvey);
+
         Button submitButton = (Button) findViewById(R.id.submit);
         final RadioGroup qualifiedStatus = (RadioGroup) findViewById(R.id.qualified_status);
         final RadioGroup verifiedStatus = (RadioGroup) findViewById(R.id.verified_status);
@@ -75,6 +78,8 @@ public class SurveyActivity extends AppCompatActivity {
                 if (verStats.getText().equals("Yes"))
                     verfied = 1;
                 else verfied = 0;
+
+
                 String information = String.valueOf(info.getText());
 
                 data.put("qualified", String.valueOf(qualified));
@@ -85,8 +90,13 @@ public class SurveyActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(String result) {
                         if(result.equals("success")){
-                            Toast.makeText(SurveyActivity.this, "Upload data successful", Toast.LENGTH_LONG).show();
-                            finish();
+                            Toast.makeText(SurveyActivity.this, "Data has been saved", Toast.LENGTH_LONG).show();
+                            if (cekboks.isChecked()){
+                                Intent intent = new Intent(SurveyActivity.this, UploadImageActivity.class);
+                                startActivity(intent);
+                            }else {
+                                finish();
+                            }
                         }
                         else
                             Toast.makeText(SurveyActivity.this, "Upload data failed. Try again.", Toast.LENGTH_LONG).show();

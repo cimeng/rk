@@ -76,8 +76,26 @@
         android:layout_height="wrap_content"
         android:inputType="textLongMessage"
         android:layout_marginBottom="10dp"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/checkSurvey"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Upload image"/>
+    </LinearLayout>
+
+
 
     <Button
+        android:layout_marginTop="10dp"
         android:id="@+id/submit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
