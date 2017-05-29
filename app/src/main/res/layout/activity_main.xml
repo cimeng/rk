@@ -13,7 +13,7 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-         android:background="@color/colorPrimary"
+        android:backgroundTint="@color/colorPrimary"
         android:text="Submit Data"
         android:textColor="@android:color/white"
         android:layout_alignParentBottom="true">

@@ -1,33 +1,135 @@
 package id.co.myapplication;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class MainActivity extends AppCompatActivity {
-    ListView Listmenu;
+public class MainActivity extends AppCompatActivity
+        implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
+    private ListView Listmenu;
+    private LocationRequest mLocationRequest;
+    private LocationManager locationManager;
+    private GoogleApiClient mGoogleApiClient;
+    private Location mCurrentLocation;
+
+    private String TAG = "MainActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Listmenu = (ListView) findViewById(R.id.list_menu);
-        String[] name= getResources().getStringArray(R.array.nama_toko);
-        String[] sub = getResources().getStringArray(R.array.subs);
-        menuAdapter adapter = new menuAdapter(MainActivity.this, menuClass.addAll(name, sub));
-        Listmenu.setAdapter(adapter);
+
+        getSurveyLocationData();
+
+        locationManager = (LocationManager) MainActivity.this.getSystemService(LOCATION_SERVICE);
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+        }
+
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        LocationListener locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+                mGoogleApiClient.connect();
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+            }
+        };
+
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this,
+                        Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.d(TAG, "connected");
+        if (mCurrentLocation == null) {
+            if (ActivityCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(this,
+                            Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+            mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        mCurrentLocation = location;
     }
 
     private class menuAdapter extends ArrayAdapter<menuClass> {
@@ -57,5 +159,68 @@ public class MainActivity extends AppCompatActivity {
             }
             return convertView;
         }
+
+    }
+
+    private void getSurveyLocationData(){
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, Config.address+"getlocation",
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.d(TAG, "volley res: " + response);
+
+                        List<Integer> id = new ArrayList<Integer>();
+                        List<String> name = new ArrayList<String>();
+                        List<Double> lat = new ArrayList<Double>();
+                        List<Double> lng = new ArrayList<Double>();
+
+                        try {
+                            JSONArray responseArray = new JSONArray(response);
+                            for(int i=0; i<responseArray.length(); i++){
+                                int locationId = responseArray.getJSONObject(i).getInt("id");
+                                String locationName = responseArray.getJSONObject(i).getString("location_name");
+                                double locationLatitude = responseArray.getJSONObject(i).getDouble("latitude");
+                                double locationLongitude = responseArray.getJSONObject(i).getDouble("longitude");
+
+                                id.add(locationId);
+                                name.add(locationName);
+                                lat.add(locationLatitude);
+                                lng.add(locationLongitude);
+                            }
+                            Log.d(TAG, name.toString());
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        Listmenu = (ListView) findViewById(R.id.list_menu);
+                        String[] sub = getResources().getStringArray(R.array.subs);
+
+                        menuAdapter adapter = new menuAdapter(MainActivity.this, menuClass.addAll(id, name, sub, lat, lng));
+                        Listmenu.setAdapter(adapter);
+
+                        Listmenu.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                            @Override
+                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                menuClass menu = (menuClass) parent.getItemAtPosition(position);
+                                Log.d(TAG, "Curr location :" + String.valueOf(mCurrentLocation.getLatitude()) +" "+ String.valueOf(mCurrentLocation.getLongitude()) );
+
+//                                Intent intent = new Intent(MainActivity.this, SurveyActivity.class);
+//                                intent.putExtra("id", String.valueOf(menu.id));
+//                                intent.putExtra("nama", menu.nama);
+//                                intent.putExtra("lat", menu.lat);
+//                                intent.putExtra("lng", menu.lng);
+//                                startActivity(intent);
+                            }
+                        });
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("Volley Error", error.toString());
+            }
+        }){
+        };
+        RequestQueue requestQueue = Volley.newRequestQueue(MainActivity.this);
+        requestQueue.add(stringRequest);
     }
 }
