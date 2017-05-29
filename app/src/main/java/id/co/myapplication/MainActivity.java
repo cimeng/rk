@@ -22,6 +22,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -67,6 +68,7 @@ public class MainActivity extends AppCompatActivity
                     .addOnConnectionFailedListener(this)
                     .addApi(LocationServices.API)
                     .build();
+            mGoogleApiClient.connect();
         }
 
         mLocationRequest = new LocationRequest();
@@ -85,6 +87,7 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onProviderEnabled(String provider) {
+                Log.d(TAG, "provider enabled");
                 mGoogleApiClient.connect();
             }
 
@@ -202,14 +205,21 @@ public class MainActivity extends AppCompatActivity
                             @Override
                             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                                 menuClass menu = (menuClass) parent.getItemAtPosition(position);
-                                Log.d(TAG, "Curr location :" + String.valueOf(mCurrentLocation.getLatitude()) +" "+ String.valueOf(mCurrentLocation.getLongitude()) );
 
-//                                Intent intent = new Intent(MainActivity.this, SurveyActivity.class);
-//                                intent.putExtra("id", String.valueOf(menu.id));
-//                                intent.putExtra("nama", menu.nama);
-//                                intent.putExtra("lat", menu.lat);
-//                                intent.putExtra("lng", menu.lng);
-//                                startActivity(intent);
+                                double dist = getDistance(menu.lat, menu.lng, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                                Log.d(TAG, String.valueOf(dist)+"m");
+
+                                if(dist<=50.0){
+                                    Intent intent = new Intent(MainActivity.this, SurveyActivity.class);
+                                    intent.putExtra("id", String.valueOf(menu.id));
+                                    intent.putExtra("nama", menu.nama);
+                                    intent.putExtra("lat", menu.lat);
+                                    intent.putExtra("lng", menu.lng);
+                                    startActivity(intent);
+                                }
+                                else{
+                                    Toast.makeText(MainActivity.this, "Anda terlalu jauh dari lokasi", Toast.LENGTH_LONG).show();
+                                }
                             }
                         });
                     }
@@ -222,5 +232,22 @@ public class MainActivity extends AppCompatActivity
         };
         RequestQueue requestQueue = Volley.newRequestQueue(MainActivity.this);
         requestQueue.add(stringRequest);
+    }
+
+    private double getDistance(double lat1, double lng1, double lat2, double lng2){
+        double r = 6371000;
+        double currLat1 = Math.toRadians(lat1);
+        double currLat2 = Math.toRadians(lat2);
+        double deltaLat = Math.toRadians(lat2-lat1);
+        double deltaLng = Math.toRadians(lng2-lng1);
+
+        double a = (Math.sin(deltaLat/2) * Math.sin(deltaLat/2)) +
+                (Math.cos(currLat1) * Math.cos(currLat2) * Math.sin(deltaLng) * Math.sin(deltaLng));
+        double c = Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        double d = r * c;
+
+        Log.d("dist", String.valueOf(d));
+
+        return d;
     }
 }
