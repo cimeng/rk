@@ -40,6 +40,8 @@ public class SurveyActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_survey);
 
+        final CheckBox cekboks = (CheckBox) findViewById(R.id.checkSurvey);
+
         Intent intent = getIntent();
         String name = intent.getStringExtra("nama");
         String id = intent.getStringExtra("id");
@@ -52,8 +54,6 @@ public class SurveyActivity extends AppCompatActivity {
 
         TextView locationName = (TextView) findViewById(R.id.location_name);
         locationName.setText(name);
-
-        final CheckBox cekboks = (CheckBox) findViewById(R.id.checkSurvey);
 
         Button submitButton = (Button) findViewById(R.id.submit);
         final RadioGroup qualifiedStatus = (RadioGroup) findViewById(R.id.qualified_status);
@@ -79,8 +79,11 @@ public class SurveyActivity extends AppCompatActivity {
                     verfied = 1;
                 else verfied = 0;
 
-
-                String information = String.valueOf(info.getText());
+                String information;
+                if(info.getText().equals("")){
+                    information = "no information";
+                }
+                else information = String.valueOf(info.getText());
 
                 data.put("qualified", String.valueOf(qualified));
                 data.put("verified", String.valueOf(verfied));
